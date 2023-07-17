@@ -37,6 +37,31 @@ public class ItunesDAO {
 		return result;
 	}
 	
+	public List<Album> getAlbumsWithDuration(Double duration){
+		final String sql = "SELECT album.*,SUM(track.Milliseconds) AS duration "
+				+ "FROM album, track "
+				+ "WHERE album.AlbumId = track.AlbumId "
+				+ "GROUP BY album.AlbumId "
+				+ "HAVING duration >=?";
+		List<Album> result = new LinkedList<>();
+		
+		try {
+			Connection conn = DBConnect.getConnection();
+			PreparedStatement st = conn.prepareStatement(sql);
+			st.setInt(1, (int)(duration*60*1000));
+			ResultSet res = st.executeQuery();
+
+			while (res.next()) {
+				result.add(new Album(res.getInt("AlbumId"), res.getString("Title"), res.getDouble("duration")/60/1000));
+			}
+			conn.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+			throw new RuntimeException("SQL Error");
+		}
+		return result;
+	}
+	
 	public List<Artist> getAllArtists(){
 		final String sql = "SELECT * FROM Artist";
 		List<Artist> result = new LinkedList<>();
@@ -139,4 +164,6 @@ public class ItunesDAO {
 		}
 		return result;
 	}
+	
+	
 }
